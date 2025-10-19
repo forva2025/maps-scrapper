@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: mapscraper-db
+    environment:
+      POSTGRES_DB: mapscraper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mapscraper123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mapscraper-network
+
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    container_name: mapscraper-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mapscraper-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mapscraper-backend
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mapscraper
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-mapscraper123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY}
+      BING_MAPS_API_KEY: ${BING_MAPS_API_KEY}
+      YELP_API_KEY: ${YELP_API_KEY}
+      FRONTEND_URL: http://localhost:5173
+    volumes:
+      - ./backend/logs:/app/logs
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mapscraper-network
+    restart: unless-stopped
+
+  # Frontend (development)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: mapscraper-frontend
+    environment:
+      VITE_API_URL: http://localhost:8080
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - mapscraper-network
+    profiles:
+      - dev
+
+  # Caddy reverse proxy (production)
+  caddy:
+    image: caddy:2.7.4-alpine
+    container_name: mapscraper-caddy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./public:/srv/www
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./logs/caddy:/var/log/caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - mapscraper-network
+    profiles:
+      - prod
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  mapscraper-network:
+    driver: bridge

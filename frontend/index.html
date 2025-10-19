@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super MapScraper - Unlimited Business Data Extraction</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Extract unlimited business location data from Google Maps with advanced search capabilities. No data limits, maximum coverage.">
+  <meta name="keywords" content="maps scraper, business data, location search, Google Places API, data extraction">
+  <meta name="author" content="Super MapScraper">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Super MapScraper - Unlimited Business Data Extraction">
+  <meta property="og:description" content="Extract unlimited business location data from Google Maps with advanced search capabilities. No data limits, maximum coverage.">
+  <meta property="og:image" content="/icons/preview.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://super-mapscraper.com">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Super MapScraper - Unlimited Business Data Extraction">
+  <meta name="twitter:description" content="Extract unlimited business location data from Google Maps with advanced search capabilities.">
+  <meta name="twitter:image" content="/icons/preview.png">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Super MapScraper">
+  
+  <!-- Performance Hints -->
+  <link rel="preconnect" href="https://maps.googleapis.com" crossorigin>
+  <link rel="preload" href="/bundle.min.js" as="script" importance="high">
+  <link rel="preload" href="/styles.css" as="style">
+  
+  <!-- Favicon and Icons -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin="">
+</head>
+<body>
+  <div id="app"></div>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+  
+  <!-- Main App Script -->
+  <script type="module" src="/src/index.js"></script>
+</body>
+</html>
